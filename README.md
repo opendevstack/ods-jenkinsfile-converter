@@ -1,4 +1,5 @@
 # ods-jenkinsfile-converter
+[![build](https://github.com/opendevstack/ods-jenkinsfile-converter/actions/workflows/build.yml/badge.svg)](https://github.com/opendevstack/ods-jenkinsfile-converter/actions/workflows/build.yml)
 
 ## Introduction
 
