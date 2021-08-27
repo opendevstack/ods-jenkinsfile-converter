@@ -1,0 +1,22 @@
+// See https://www.opendevstack.org/ods-documentation/ for usage and customization.
+
+@Library('ods-jenkins-shared-library@3.x') _
+
+odsComponentPipeline(
+  imageStreamTag: 'ods/jenkins-agent-base:3.0.0',
+  openshiftBuildTimeout: 30,  
+  branchToEnvironmentMapping: [
+    'master': 'dev',
+    // 'release/': 'test'
+  ]
+) { context ->
+
+  odsComponentStageImportOpenShiftImageOrElse(context) {
+    odsComponentStageBuildOpenShiftImage(context)
+  }
+
+  // rollout auth proxy - this registers the dc for later promotion
+  odsComponentStageRolloutOpenShiftDeployment(context, [resourceName: "${context.componentId}-auth-proxy"])
+
+  odsComponentStageRolloutOpenShiftDeployment(context)
+}
