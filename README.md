@@ -16,7 +16,7 @@ Generate the binaries under [bin](./bin)
 You can run the binary for your platform. To preview the changes that will be done, use the `--dry-run` flag
 
 ```cli
-  ./bin/converter -filename="examples/machine-learning/Jenkinsfile" --dry-run"
+  ./bin/converter -filename="examples/machine-learning/Jenkinsfile" --dry-run
 ```
 
 or to persist the changes in an output file
