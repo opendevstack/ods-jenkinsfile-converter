@@ -1,11 +1,15 @@
 export GO111MODULE=on
 
-all: build dist
+all: build test dist
 .PHONY: all
 
 build:
 	go build -o converter
 .PHONY: build
+
+test:
+	go test -v -coverprofile cover.out
+.PHONY: test
 
 dist:
 	mkdir -p bin
