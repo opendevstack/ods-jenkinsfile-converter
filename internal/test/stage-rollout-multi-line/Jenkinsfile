@@ -1,0 +1,62 @@
+// See https://www.opendevstack.org/ods-documentation/ for usage and customization.
+
+@Library('ods-jenkins-shared-library@3.x') _
+
+node { 
+    dockerRegistry = env.DOCKER_REGISTRY
+}
+
+odsComponentPipeline(
+  imageStreamTag: 'ods/jenkins-agent-maven:3.0.0',
+  branchToEnvironmentMapping: [
+    'master': 'dev',
+    'release/': 'test',
+  ]
+) { context ->
+
+  odsComponentStageImportOpenShiftImageOrElse(context) {
+    stageBuild(context)
+    odsComponentStageScanWithSonar(context)
+    odsComponentStageBuildOpenShiftImage(context,[
+      tailorParams: [
+        "DOCKER_REGISTRY=${dockerRegistry}"
+      ]
+      ])
+  }
+  odsComponentStageRolloutOpenShiftDeployment(context, [
+    deployTimeoutMinutes: 5,
+    openshiftDir: "openshift",
+    dockerDir: "docker",
+    resourceName        : "${context.componentId}",
+    tailorSelector      : "app=${context.projectId}-${context.componentId}",    
+    tailorExclude       : 'bc,is',
+     tailorParams: [
+        "DOCKER_REGISTRY=${dockerRegistry}"
+      ]    
+    // tailorParams        : [
+    //   "PROJECT=${context.projectId}",  // projectId == atlasdev-dev, targetProject == atlasdev
+    //   "ENV=${context.environment}",
+    //   "DOCKER_REGISTRY=${dockerRegistry}",
+    //   "COMPONENT=${context.componentId}",
+    //   "TAGVERSION=${context.gitCommit}",
+    // ],
+  ])
+}
+
+def stageBuild(def context) {
+  def javaOpts = "-Xmx512m"
+  def gradleTestOpts = "-Xmx128m"
+  def springBootEnv = context.environment
+  if (springBootEnv.contains('-dev')) {
+    springBootEnv = 'dev'
+  }
+  stage('Build and Unit Test') {
+    withEnv(["TAGVERSION=${context.tagversion}", "NEXUS_HOST=${context.nexusHost}", "NEXUS_USERNAME=${context.nexusUsername}", "NEXUS_PASSWORD=${context.nexusPassword}", "JAVA_OPTS=${javaOpts}","GRADLE_TEST_OPTS=${gradleTestOpts}","ENVIRONMENT=${springBootEnv}"]) {
+      def chmodXGradelw = sh(script: "chmod +x gradlew", returnStatus: true)
+      def status = sh(script: "./gradlew clean build --stacktrace --no-daemon", returnStatus: true)
+      if (status != 0) {
+        error "Build failed!"
+      }
+    }
+  }
+}

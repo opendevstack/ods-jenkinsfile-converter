@@ -1,3 +1,5 @@
 bin/
 converter
-out/
+internal/test/**/out/Jenkinsfile
+out/Jenkinsfile
+cover.out

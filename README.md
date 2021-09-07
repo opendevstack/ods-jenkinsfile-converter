@@ -53,7 +53,7 @@ You can run the binary for your platform. To preview the changes that will be do
 ## Run it with `Go`
 
 ```cli
-  go run . -filename="examples/machine-learning/Jenkinsfile" -out out/Jenkinsfile"
+  go run . -filename="examples/machine-learning/Jenkinsfile" -out "out/Jenkinsfile"
 ```
 
 ## Features

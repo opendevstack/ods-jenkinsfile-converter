@@ -39,8 +39,8 @@ func replaceLibrary(content string) string {
 }
 
 func replaceAgentImages(content string) string {
-	re := regexp.MustCompile(`'ods/jenkins-agent-(.*):.*'`)
-	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.x'")
+	re := regexp.MustCompile(`'ods\/jenkins-agent-(.*):(\d).(.*)'`)
+	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.$3'")
 }
 
 func replaceComponentStageImport(content string) string {
@@ -48,6 +48,19 @@ func replaceComponentStageImport(content string) string {
 }
 
 func replaceComponentStageRollout(content string) string {
+	content, match := replaceComponentStageRolloutMultiLine(content)
+	if !match {
+		content, _ = replaceComponentStageRolloutSingleLine(content)
+	}
+	return content
+}
+
+func replaceComponentStageRolloutMultiLine(content string) (string, bool) {
+	re := regexp.MustCompile(`(?ms)odsComponentStageRolloutOpenShiftDeployment\((context, \[\n?.*)]\)$`)
+	return re.ReplaceAllString(content, "odsComponentStageRolloutOpenShiftDeployment(context)"), re.Match([]byte(content))
+}
+
+func replaceComponentStageRolloutSingleLine(content string) (string, bool) {
 	re := regexp.MustCompile(`odsComponentStageRolloutOpenShiftDeployment(.*)`)
-	return re.ReplaceAllString(content, "odsComponentStageRolloutOpenShiftDeployment(context)")
+	return re.ReplaceAllString(content, "odsComponentStageRolloutOpenShiftDeployment(context)"), re.Match([]byte(content))
 }
