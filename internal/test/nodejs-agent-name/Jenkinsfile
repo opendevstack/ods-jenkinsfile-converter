@@ -1,0 +1,13 @@
+// See https://www.opendevstack.org/ods-documentation/ for usage and customization.
+
+@Library('ods-jenkins-shared-library@3.x') _
+
+odsComponentPipeline(
+  imageStreamTag: 'ods/jenkins-agent-nodejs10-angular:3.0.0',
+  branchToEnvironmentMapping: [
+    'master': 'dev',
+    'release/': 'test',
+  ]
+) { context ->
+  // nothing...
+}

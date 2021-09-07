@@ -32,6 +32,14 @@ func TestReplace(t *testing.T) {
 			},
 			want: readFile("internal/test/stage-rollout-multi-line/golden/Jenkinsfile"),
 		},
+		{
+			name: "NodeJS agent name change",
+			args: args{
+				inputFile:     "internal/test/nodejs-agent-name/Jenkinsfile",
+				convertedFile: "internal/test/nodejs-agent-name/out/Jenkinsfile",
+			},
+			want: readFile("internal/test/nodejs-agent-name/golden/Jenkinsfile"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

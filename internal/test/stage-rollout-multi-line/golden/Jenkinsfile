@@ -7,7 +7,7 @@ node {
 }
 
 odsComponentPipeline(
-  imageStreamTag: 'ods/jenkins-agent-maven:4.0.0',
+  imageStreamTag: 'ods/jenkins-agent-maven:4.x',
   branchToEnvironmentMapping: [
     'master': 'dev',
     'release/': 'test',
