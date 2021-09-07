@@ -39,8 +39,15 @@ func replaceLibrary(content string) string {
 }
 
 func replaceAgentImages(content string) string {
-	re := regexp.MustCompile(`'ods\/jenkins-agent-(.*):(\d).(.*)'`)
-	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.$3'")
+	re := regexp.MustCompile(`'ods/jenkins-agent-(.*):.*'`)
+
+	matches := re.FindAllStringSubmatch(content, -1)
+	fmt.Println(matches[0][1])
+	if string(matches[0][1]) == "nodejs10-angular" {
+		return re.ReplaceAllString(content, "'ods/jenkins-agent-nodejs12:4.x'")
+	}
+
+	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.x'")
 }
 
 func replaceComponentStageImport(content string) string {

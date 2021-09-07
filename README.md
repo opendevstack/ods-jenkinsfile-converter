@@ -7,10 +7,10 @@ This is a Golang CLI to convert the a Jenkinsfile based on 3.x to 4.x based on t
 
 ## Download
 
-Target a specific version and platform for the binary. For version `v0.1.0` and linux, you would:
+Target a specific version and platform for the binary. For version `v0.1.2` and linux, you would:
 
 ```cli
-  curl -L https://github.com/opendevstack/ods-jenkinsfile-converter/releases/download/v0.1.0/converter -o converter
+  curl -L https://github.com/opendevstack/ods-jenkinsfile-converter/releases/download/v0.1.2/converter -o converter
   sudo mv converter /usr/local/bin
 ```
 
@@ -62,6 +62,7 @@ This tool will carry out the following changes in an ODS 3.x Jenkinsfile:
 
 - [X] Update `@Library('ods-jenkins-shared-library@3.x') _` to `@Library('ods-jenkins-shared-library@4.x') _`
 - [X] Point to agent images with the 4.x tag, e.g. change imageStreamTag: `ods/jenkins-agent-golang:3.x` to imageStreamTag: `ods/jenkins-agent-golang:4.x`.
+- [X] NodeJS agent name is going to change in ODS 4. From `jenkins-agent-nodejs10-angular` to `jenkins-agent-nodejs12`.
 - [X] `odsComponentStageImportOpenShiftImageOrElse` has been deprecated, and is now aliased to the new method, `odsComponentFindOpenShiftImageOrElse`.
 - [X] `odsComponentStageRolloutOpenShiftDeployment` rolls out all deployment resources together now. If you had multiple DeploymentConfig resources previously, you had to target each one by specifying the config option resourceName. This is no longer possible - instead the stage iterates over all DeploymentConfig resources with the component label (app=${projectId}-${componentId}). Changes must be made to pipelines that have multiple deployments, such as components based on the ds-jupyter-notebook and ds-rshiny quickstarter.
 
