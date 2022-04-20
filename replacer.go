@@ -42,12 +42,33 @@ func replaceAgentImages(content string) string {
 	re := regexp.MustCompile(`'ods/jenkins-agent-(.*):.*'`)
 
 	matches := re.FindAllStringSubmatch(content, -1)
+	return fmt.Sprintf("Returned value: %q. Argument passed: %q", matches, content)
+
 	fmt.Println(matches[0][1])
 	if string(matches[0][1]) == "nodejs10-angular" {
 		return re.ReplaceAllString(content, "'ods/jenkins-agent-nodejs12:4.x'")
 	}
 
 	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.x'")
+}
+
+// At the moment, this attempts to only change images from ods/jenkins-agent* and should leave the rest as is
+// If no change is made, it will inform to manually check it
+func replaceAgentImagesFuzzy(content string) string {
+	re := regexp.MustCompile(`['"]?ods/jenkins-agent-(.*):.*['"]?`)
+
+	matches := re.FindAllStringSubmatch(content, -1)
+	if matches != nil {
+		fmt.Println(matches[0][1])
+		if string(matches[0][1]) == "nodejs10-angular" {
+			return re.ReplaceAllString(content, "'ods/jenkins-agent-nodejs12:4.x'")
+		}
+
+		return re.ReplaceAllString(content, "ods/jenkins-agent-$1:4.x")
+	}
+
+	fmt.Println("Warning: No canonical image found. Please, consider if there is an image that should also be migrated to version 4.x")
+	return content
 }
 
 func replaceComponentStageImport(content string) string {
