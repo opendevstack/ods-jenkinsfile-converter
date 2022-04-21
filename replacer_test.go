@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 )
@@ -16,8 +17,7 @@ func TestReplace(t *testing.T) {
 		args args
 		want string
 	}{
-		{
-			name: "Stage Rollout Single Line",
+		{name: "Stage Rollout Single Line",
 			args: args{
 				inputFile:     "internal/test/stage-rollout-single-line/Jenkinsfile",
 				convertedFile: "internal/test/stage-rollout-single-line/out/Jenkinsfile",
@@ -68,60 +68,67 @@ func readFile(goldenFile string) string {
 	return string(want)
 }
 
-// We expect to fail here almost in all cases, except for ods/jenkins-agent-* images
-// It has also the problem of the single quotes in the pattern
+// At the moment, we expect three changes to take place in this test suite, one result should be blank without panicking (relman)
+// and the rest should be left the same because they are concrete images
 func TestTableReplaceAgentImages(t *testing.T) {
 
-	tests := []struct {
+	testsDouble := []struct {
 		input    string
 		expected string
 	}{
-		{input: "ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "'ods/jenkins-agent-nodejs12-angular:4.x'"},
-		{input: "ods/jenkins-agent-maven:3.0.0", expected: "'ods/jenkins-agent-maven:4.x'"},
-		{input: "ods/jenkins-agent-base:3.0.0", expected: "'ods/jenkins-agent-base:4.x'"},
-		{input: "", expected: ""},
-		{input: "alpha/jenkins-agent-nodejs10-angular:3.x", expected: "alpha/jenkins-agent-nodejs10-angular:3.x"},
-		{input: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0"},
-		{input: "odsalpha/jenkins-agent-nodejs10-angular:3.x", expected: "odsalpha/jenkins-agent-nodejs10-angular:3.x"},
-		{input: "odsalpha/jenkins-agent-base:3.x", expected: "odsalpha/jenkins-agent-base:3.x"},
-		{input: "odsalpha/jenkins-agent-terraform:3.x", expected: "odsalpha/jenkins-agent-terraform:3.x"},
-		{input: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest", expected: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest"},
+		{input: "alpha/jenkins-agent-nodejs10-angular:3.x", expected: "\"alpha/jenkins-agent-nodejs10-angular:3.x\""},
+		{input: "ods/jenkins-agent-maven:3.0.0", expected: "\"ods/jenkins-agent-maven:4.x\""},
+		{input: "ods/jenkins-agent-base:3.0.0", expected: "\"ods/jenkins-agent-base:4.x\""},
+		{input: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "\"${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0\""},
+		{input: "ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "\"ods/jenkins-agent-nodejs12:4.x\""},
+		{input: "odsalpha/jenkins-agent-nodejs10-angular:3.x", expected: "\"odsalpha/jenkins-agent-nodejs10-angular:3.x\""},
+		{input: "odsalpha/jenkins-agent-base:3.x", expected: "\"odsalpha/jenkins-agent-base:3.x\""},
+		{input: "", expected: "\"\""},
+		{input: "odsalpha/jenkins-agent-terraform:3.x", expected: "\"odsalpha/jenkins-agent-terraform:3.x\""},
+		{input: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest", expected: "\"${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest\""},
 	}
 
-	for _, test := range tests {
-		if output := replaceAgentImages(test.input); output != test.expected {
-			t.Errorf("TestTableReplaceAgentImages FAILED; input: %q, expected %q, received: %q", test.input, test.expected, output)
+	fmt.Println()
+	t.Logf("####################################")
+	t.Logf("## Test suite doble quoted values ##")
+	t.Logf("####################################\n")
+	fmt.Println()
+	for _, test := range testsDouble {
+		dobleQuoted := fmt.Sprintf("%q", test.input)
+		if output := replaceAgentImages(dobleQuoted); output != test.expected {
+			t.Errorf("FAILED; input: %q, expected %q, received: %q.", dobleQuoted, test.expected, output)
 		} else {
-			t.Logf("TestTableReplaceAgentImages PASSED; input: %q, expected %q, received: %q", test.input, test.expected, output)
+			t.Logf("PASSED; input: %q, expected %q, received: %q", dobleQuoted, test.expected, output)
 		}
 	}
-}
 
-// At the moment we expect three changes to take place in this test suite, one blank without panic (relman)
-// and the rest to be left the same because they are concrete images
-func TestTableReplaceAgentImagesFuzzy(t *testing.T) {
-
-	tests := []struct {
+	testsSingle := []struct {
 		input    string
 		expected string
 	}{
-		{input: "alpha/jenkins-agent-nodejs10-angular:3.x", expected: "alpha/jenkins-agent-nodejs10-angular:3.x"},
-		{input: "ods/jenkins-agent-maven:3.0.0", expected: "ods/jenkins-agent-maven:4.x"},
-		{input: "ods/jenkins-agent-base:3.0.0", expected: "ods/jenkins-agent-base:4.x"},
-		{input: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0"},
+		{input: "alpha/jenkins-agent-nodejs10-angular:3.x", expected: "'alpha/jenkins-agent-nodejs10-angular:3.x'"},
+		{input: "ods/jenkins-agent-maven:3.0.0", expected: "'ods/jenkins-agent-maven:4.x'"},
+		{input: "ods/jenkins-agent-base:3.0.0", expected: "'ods/jenkins-agent-base:4.x'"},
+		{input: "${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "'${dockerRegistry}/ods/jenkins-agent-nodejs10-angular:3.0.0'"},
 		{input: "ods/jenkins-agent-nodejs10-angular:3.0.0", expected: "'ods/jenkins-agent-nodejs12:4.x'"},
-		{input: "odsalpha/jenkins-agent-nodejs10-angular:3.x", expected: "odsalpha/jenkins-agent-nodejs10-angular:3.x"},
-		{input: "odsalpha/jenkins-agent-base:3.x", expected: "odsalpha/jenkins-agent-base:3.x"},
-		{input: "", expected: ""},
-		{input: "odsalpha/jenkins-agent-terraform:3.x", expected: "odsalpha/jenkins-agent-terraform:3.x"},
-		{input: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest", expected: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest"},
+		{input: "odsalpha/jenkins-agent-nodejs10-angular:3.x", expected: "'odsalpha/jenkins-agent-nodejs10-angular:3.x'"},
+		{input: "odsalpha/jenkins-agent-base:3.x", expected: "'odsalpha/jenkins-agent-base:3.x'"},
+		{input: "", expected: "''"},
+		{input: "odsalpha/jenkins-agent-terraform:3.x", expected: "'odsalpha/jenkins-agent-terraform:3.x'"},
+		{input: "${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest", expected: "'${dockerRegistry}/edpp-cd/jenkins-agent-maven-chrome:latest'"},
 	}
 
-	for _, test := range tests {
-		if output := replaceAgentImagesFuzzy(test.input); output != test.expected {
-			t.Errorf("TestTableReplaceAgentImages FAILED; input: %q, expected %q, received: %q.", test.input, test.expected, output)
+	fmt.Println()
+	t.Logf("#####################################")
+	t.Logf("## Test suite single quoted values ##")
+	t.Logf("#####################################\n")
+	fmt.Println()
+	for _, test := range testsSingle {
+		singleQuoted := fmt.Sprintf("'%v'", test.input)
+		if output := replaceAgentImages(singleQuoted); output != test.expected {
+			t.Errorf("FAILED; input: %q, expected %q, received: %q.", singleQuoted, test.expected, output)
 		} else {
-			t.Logf("TestTableReplaceAgentImages PASSED; input: %q, expected %q, received: %q", test.input, test.expected, output)
+			t.Logf("PASSED; input: %q, expected %q, received: %q", singleQuoted, test.expected, output)
 		}
 	}
 
