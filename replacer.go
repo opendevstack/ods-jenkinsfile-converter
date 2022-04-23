@@ -38,37 +38,27 @@ func replaceLibrary(content string) string {
 	return strings.Replace(content, "@Library('ods-jenkins-shared-library@3.x') _", "@Library('ods-jenkins-shared-library@4.x') _", -1)
 }
 
-// This attempts to change images that follows the pattern "ods/jenkins-agent*". The method considers single and double quoted
-// values as well as prevents from panicking. Instead, the image should be left as is and it will advice to manually check it
-// Note: this is considered a temporary solution to the problem faced with Jenkinsfiles
+// replaceAgentImages is a method that changes images which follows the pattern "ods/jenkins-agent*".
+//It considers single, double quotes, and multiple images in the same Jenkinsfile without panicking.
 func replaceAgentImages(content string) string {
 
-	reSingle := regexp.MustCompile(`'ods/jenkins-agent-(.*):.*'`)
-	matches := reSingle.FindAllStringSubmatch(content, -1)
+	re := regexp.MustCompile(`(['"]{1}ods/jenkins-agent-)(.*):(.*)(['"]{1})`)
+	lines := strings.Split(content, "\n")
 
-	if matches != nil {
-		if string(matches[0][1]) == "nodejs10-angular" {
-			return reSingle.ReplaceAllString(content, "'ods/jenkins-agent-nodejs12:4.x'")
-		}
+	for idx, line := range lines {
 
-		return reSingle.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.x'")
-
-	} else {
-
-		reDouble := regexp.MustCompile(`"ods/jenkins-agent-(.*):.*"`)
-		matches := reDouble.FindAllStringSubmatch(content, -1)
-
-		if matches != nil {
-			if string(matches[0][1]) == "nodejs10-angular" {
-				return reDouble.ReplaceAllString(content, "\"ods/jenkins-agent-nodejs12:4.x\"")
-			}
-
-			return reDouble.ReplaceAllString(content, "\"ods/jenkins-agent-$1:4.x\"")
+		if match := re.FindStringSubmatch(line); match != nil {
+			lines[idx] = func(s1 string, s2 []string) string {
+				if string(match[2]) == "nodejs10-angular" {
+					return re.ReplaceAllString(line, fmt.Sprintf("%s%s%s", s2[1], "nodejs12:4.x", s2[4]))
+				} else {
+					return re.ReplaceAllString(line, fmt.Sprintf("%s%s%s%s", s2[1], s2[2], ":4.x", s2[4]))
+				}
+			}(line, match)
 		}
 	}
 
-	fmt.Printf("Warning: No canonical image found, such as this pattern :'ods/jenkins-agent-*'. \nPlease, consider if there is an image that should also be migrated to ODS version 4.\n")
-	return content
+	return strings.Join(lines, "\n")
 }
 
 func replaceComponentStageImport(content string) string {
