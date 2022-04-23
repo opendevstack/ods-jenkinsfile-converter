@@ -38,16 +38,25 @@ func replaceLibrary(content string) string {
 	return strings.Replace(content, "@Library('ods-jenkins-shared-library@3.x') _", "@Library('ods-jenkins-shared-library@4.x') _", -1)
 }
 
+// replaceAgentImages is a method that changes images which follows a quoted pattern like "ods/jenkins-agent-*".
+//It considers single, double quotes, and multiple images in the same Jenkinsfile without panicking.
 func replaceAgentImages(content string) string {
-	re := regexp.MustCompile(`'ods/jenkins-agent-(.*):.*'`)
 
-	matches := re.FindAllStringSubmatch(content, -1)
-	fmt.Println(matches[0][1])
-	if string(matches[0][1]) == "nodejs10-angular" {
-		return re.ReplaceAllString(content, "'ods/jenkins-agent-nodejs12:4.x'")
+	re := regexp.MustCompile(`(['"]{1}ods/jenkins-agent-)(.*):(.*)(['"]{1})`)
+	lines := strings.Split(content, "\n")
+
+	for idx, line := range lines {
+		if matches := re.FindStringSubmatch(line); matches != nil {
+			lines[idx] = func(s1 string, s2 []string) string {
+				if string(s2[2]) == "nodejs10-angular" {
+					return re.ReplaceAllString(s1, fmt.Sprintf("%s%s%s", s2[1], "nodejs12:4.x", s2[4]))
+				} else {
+					return re.ReplaceAllString(s1, fmt.Sprintf("%s%s%s%s", s2[1], s2[2], ":4.x", s2[4]))
+				}
+			}(line, matches)
+		}
 	}
-
-	return re.ReplaceAllString(content, "'ods/jenkins-agent-$1:4.x'")
+	return strings.Join(lines, "\n")
 }
 
 func replaceComponentStageImport(content string) string {
